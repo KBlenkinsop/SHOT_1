@@ -249,7 +249,6 @@ void tile_normal_t::render (pigeon::gfx::sprite_batch& sprite_batch,
 //// <<< DO NOT EDIT CODE ABOVE - THIS CODE MUST BE IN YOUR TILE RENDER FUNCTION ////
 /////////////////////////////////////////////////////////////////////////////////////
 
-  cuckoo::sleep (1);
 }
 
 void tile_normal_t::on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet)

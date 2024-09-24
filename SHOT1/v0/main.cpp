@@ -218,7 +218,7 @@ ENTRY_POINT
         vector4 window_size = { (double)pigeon::gfx::driver::get_screen_size ().x, (double)pigeon::gfx::driver::get_screen_size ().y, 0.0, 0.0 };
         walls_t walls = initialise_walls (window_size);
         resolve_collisions (spritesheet, *player, tiles, walls);
-        release_walls (walls); cuckoo::sleep (1);
+        release_walls (walls);
       }
 
       check_player_needs_replacing (player);
@@ -280,7 +280,7 @@ ENTRY_POINT
           {
             wall.render (sprite_batch, spritesheet);
           }
-          release_walls (walls); cuckoo::sleep (1);
+          release_walls (walls);
         }
 
 

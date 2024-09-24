@@ -172,7 +172,6 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
       }
     }
 
-    cuckoo::sleep (1);
   }
 
 
