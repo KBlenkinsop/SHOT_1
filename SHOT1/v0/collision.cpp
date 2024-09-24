@@ -171,7 +171,6 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
         rhs.on_collision (TILE_TYPE, (void*)&lhs, spritesheet); // tell wall a tile hit it
       }
     }
-
   }
 
 
