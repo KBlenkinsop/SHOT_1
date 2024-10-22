@@ -109,7 +109,7 @@
 #include "tiles.h"                   // for tiles_t
 #include "extra/player.h"            // for player_t
 #include "extra/walls.h"             // for walls_t
-
+#include "Timer.h"
 #include <cstdlib>                   // for srand
 #include <optional>                  // for
 
@@ -157,19 +157,20 @@ ENTRY_POINT
   initialise_tiles (tiles);
 
 
-  unsigned long long const clock_frequency = cuckoo::get_cpu_frequency ();
-  // frame timer
-  unsigned long long ticks_frame_start;
-  ticks_frame_start = cuckoo::get_cpu_time (); // start frame timer
+  timer FrameTimer;
+  // start frame timer
+  FrameTimer.start_timer();
   // have really small first frame elapsed seconds, rather than an unknown time
 
 
   // GAME LOOP
   while (pigeon::gfx::driver::process_os_messages ())
   {
-    unsigned long long const ticks_frame_end = cuckoo::get_cpu_time (); // end frame timer
-    double const elapsed_seconds = (double)(ticks_frame_end - ticks_frame_start) / (double)clock_frequency;
-    ticks_frame_start = cuckoo::get_cpu_time (); // start frame timer
+    FrameTimer.end_timer();
+    float elapsed_seconds = FrameTimer.get_elapsed_time_secs();//end timer
+
+
+    FrameTimer.start_timer(); // start frame timer
     cuckoo::printf ("frame : %.5f seconds\n", elapsed_seconds);
 
 
@@ -218,7 +219,7 @@ ENTRY_POINT
         vector4 window_size = { (double)pigeon::gfx::driver::get_screen_size ().x, (double)pigeon::gfx::driver::get_screen_size ().y, 0.0, 0.0 };
         walls_t walls = initialise_walls (window_size);
         resolve_collisions (spritesheet, *player, tiles, walls);
-        release_walls (walls); cuckoo::sleep (1);
+        release_walls (walls);
       }
 
       check_player_needs_replacing (player);
@@ -226,10 +227,7 @@ ENTRY_POINT
       tiles = replace_expired_tiles (tiles);
     }
 
-
-    unsigned long long const ticks_update_end = cuckoo::get_cpu_time (); // end update timer
-    double const elapsed_seconds_update = (double)(ticks_update_end - ticks_update_start) / (double)clock_frequency;
-    cuckoo::printf ("update: %.5f seconds\n", elapsed_seconds_update);
+    //cuckoo::printf ("update: %.5f seconds\n", elapsed_seconds_update);
 
 
 ////////////////////////////////////////////////
