@@ -88,7 +88,7 @@ void player_normal_t::render (pigeon::gfx::sprite_batch& sprite_batch,
     (float)tex_rect->width, (float)tex_rect->height);
 }
 
-void player_normal_t::on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet)
+void player_normal_t::on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index)
 {
   if (other_type == WALL_TYPE)
   {
@@ -102,7 +102,7 @@ void player_normal_t::on_collision (object_type_t other_type, void* other_data, 
     // 'other_data' is a tile of some kind
 
     // this tile has hit a tile, make the appropriate changes to this tile as a result of it
-    tile_t* tile = (tile_t*)other_data;
+    tiles_t* tile = (tiles_t*)other_data;
     if (tile->get_id () == TILE_ID_NORMAL)
     {
       ++num_points;
@@ -167,7 +167,7 @@ void player_fast_t::render (pigeon::gfx::sprite_batch& sprite_batch,
     (float)tex_rect->width, (float)tex_rect->height);
 }
 
-void player_fast_t::on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet)
+void player_fast_t::on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index)
 {
   if (other_type == WALL_TYPE)
   {
@@ -181,7 +181,7 @@ void player_fast_t::on_collision (object_type_t other_type, void* other_data, pi
     // 'other_data' is a tile of some kind
 
     // this tile has hit a tile, make the appropriate changes to this tile as a result of it
-    tile_t* tile = (tile_t*)other_data;
+    tiles_t* tile = (tiles_t*)other_data;
     if (tile->get_id () == TILE_ID_NORMAL)
     {
       ++num_points;

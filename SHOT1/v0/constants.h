@@ -56,7 +56,7 @@ double const TILE_SPEED_ROTATION = cuckoo::maths::two_pi <double> () * 2.0;
 
 // object types
 
-using object_type_t = std::string;
+using object_type_t = std::string;//string veiw?
 object_type_t const PLAYER_TYPE ("player");
 object_type_t const TILE_TYPE ("tile");
 object_type_t const WALL_TYPE ("wall");

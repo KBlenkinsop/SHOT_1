@@ -2,72 +2,76 @@
 
 #include "pigeon/gfx/sprite_batch.h" // for pigeon::gfx::sprite_batch
 #include "pigeon/gfx/spritesheet.h"  // for pigeon::gfx::spritesheet
-
+#include "cuckoo/core/asserts.h"    // for cuckoo assert
 #include "constants.h"              // for object_type_t, object_id_t...
 #include "extra/utility.h"          // for vector4, random_getf
 
 #include <vector>                   // for std::vector
 
 
-// TILE
-
-struct tile_t
-{
-public:
-  tile_t ();
-  virtual ~tile_t () = default;
-
-  virtual void update (double elapsed, pigeon::gfx::spritesheet spritesheet) = 0;
-  virtual void render (pigeon::gfx::sprite_batch& sprite_batch,
-    pigeon::gfx::spritesheet spritesheet) = 0;
-
-  /// @brief the tile has collided with something
-  /// check what type of object it is and resolve the collision appropriately
-  /// @param other_type the identifier of the other object
-  /// @param other_data pointer to some data, could be another tile, a wall, or anything!
-  /// @param spritesheet spritesheet data, required to get size of other object
-  virtual void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) = 0;
-  virtual object_id_t get_id () const = 0;
-
-  virtual bool needs_replacing () const = 0;
-
-
-public:
-  vector4 position;
-  vector4 direction;
-  float angle_radians;
-};
-
 
 // TILE NORMAL
 
 /// @brief consumed when the player touches it
-struct tile_normal_t : public tile_t
-{
-public:
-  tile_normal_t ();
-
-  void update (double elapsed, pigeon::gfx::spritesheet spritesheet) override;
-  void render (pigeon::gfx::sprite_batch& sprite_batch,
-    pigeon::gfx::spritesheet spritesheet) override;
-
-  void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) override;
-  object_id_t get_id () const override;
-
-  bool needs_replacing () const override;
-
-
-private:
-  bool is_eaten;
-};
-
-
-
+//struct tile_normal_t
+//{
+//public:
+//  tile_normal_t ();
+//
+//  void update(double elapsed, pigeon::gfx::spritesheet spritesheet) override;
+//  void render(pigeon::gfx::sprite_batch& sprite_batch,
+//    pigeon::gfx::spritesheet spritesheet) override;
+//
+//  void on_collision(object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) override;
+//  object_id_t get_id() const override;
+//
+//  bool needs_replacing() const override;
+//
+//public:
+//  vector4 position;
+//  vector4 direction;
+//  float angle_radians;
+//private:
+//  bool is_eaten;
+//};
 // GENERAL
 
 struct tiles_t
 {
-  std::vector <tile_normal_t> data;
+  //std::vector <tile_normal_t> data;
+
+    void initialise_tile(int index);
+
+    void update(double elapsed)
+    {
+        for (int i = 0; i < NUM_TILES; ++i)
+        {
+            position[i].x += direction[i].x * TILE_SPEED_MOVEMENT * elapsed;
+            position[i].y += direction[i].y * TILE_SPEED_MOVEMENT * elapsed;
+
+            angle_radians[i] += (float)TILE_SPEED_ROTATION * elapsed;
+
+            float const angle_limit = cuckoo::maths::two_pi <float>();
+            angle_radians[i] = cuckoo::maths::mod(angle_radians[i], angle_limit);
+        }
+    }
+
+    void render(pigeon::gfx::sprite_batch& spritebatch, pigeon::gfx::spritesheet& spritesheet); //spritesheet 
+  
+
+    void on_collision(object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index);
+
+    object_id_t get_id() const ;
+
+    bool needs_replacing(int index);
+
+
+    vector4 position[NUM_TILES];
+    vector4 direction[NUM_TILES];
+    float angle_radians[NUM_TILES];
+private:
+    bool is_eaten[NUM_TILES];
+
 };
 
 

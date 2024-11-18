@@ -25,7 +25,7 @@ public:
   /// @param other_type the identifier of the other object
   /// @param other_data pointer to some data, could be a tile or wall, or anything!
   /// @param spritesheet spritesheet data, required to get size of other object
-  virtual void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) = 0;
+  virtual void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index) = 0;
   virtual object_id_t get_id () const = 0;
 
 
@@ -49,7 +49,7 @@ public:
   void render (pigeon::gfx::sprite_batch& sprite_batch,
     pigeon::gfx::spritesheet spritesheet) override;
 
-  void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) override;
+  void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index) override;
   object_id_t get_id () const override;
 };
 
@@ -69,7 +69,7 @@ public:
   void render (pigeon::gfx::sprite_batch& sprite_batch,
     pigeon::gfx::spritesheet spritesheet) override;
 
-  void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) override;
+  void on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index) override;
   object_id_t get_id () const override;
 
 

@@ -49,7 +49,7 @@ static void matrix_multiply (float output[4][4], float const input_a[4][4], floa
 }
 
 
-static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, tile_t* this_tile, wall_t* wall)
+static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, tiles_t* tiles, wall_t* wall, int index)
 {
   // direction response
   if (wall->get_id () == WALL_ID_LEFT || wall->get_id () == WALL_ID_RIGHT)
@@ -58,19 +58,19 @@ static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, t
 
     // the left and right walls are pefectly aligned with the y-axis
     // therefore, the tile's direction response is to have its x direction 'reflected' perfectly
-    this_tile->direction.x = -this_tile->direction.x;
+    tiles->direction[index].x = -tiles->direction[index].x;
   }
   else
   {
     // tile has hit the top or bottom wall on screen
 
     // reflect y direction
-    this_tile->direction.y = -this_tile->direction.y;
+    tiles->direction[index].y = -tiles->direction[index].y;
   }
 
   // get the tiles spritesheet rect (position, width & height)
   // this is to get the tile's size as required by the following code
-  texture_rect const* tex_rect = get_tile_texture_rect (spritesheet, this_tile->get_id ());
+  texture_rect const* tex_rect = get_tile_texture_rect (spritesheet, tiles->get_id ());
 
   // position response
   if (wall->get_id () == WALL_ID_LEFT)
@@ -78,24 +78,24 @@ static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, t
     // tile has hit the left wall, lets move it out
 
     // move tile to the rightmost edge of the left wall
-    this_tile->position.x = wall->position.x + wall->size / 2.0;
+    tiles->position[index].x = wall->position.x + wall->size / 2.0;
     // + half the width of the tile itself (remember the tile's origin is at its centre)
-    this_tile->position.x += (double)tex_rect->width / 2.0;
+    tiles->position[index].x += (double)tex_rect->width / 2.0;
   }
   else if (wall->get_id () == WALL_ID_RIGHT)
   {
-    this_tile->position.x = wall->position.x - wall->size / 2.0;
-    this_tile->position.x -= (double)tex_rect->width / 2.0;
+    tiles->position[index].x = wall->position.x - wall->size / 2.0;
+    tiles->position[index].x -= (double)tex_rect->width / 2.0;
   }
   else if (wall->get_id () == WALL_ID_TOP)
   {
-    this_tile->position.y = wall->position.y - wall->size / 2.0;
-    this_tile->position.y -= (double)tex_rect->height / 2.0;
+    tiles->position[index].y = wall->position.y - wall->size / 2.0;
+    tiles->position[index].y -= (double)tex_rect->height / 2.0;
   }
   else if (wall->get_id () == WALL_ID_BOTTOM)
   {
-    this_tile->position.y = wall->position.y + wall->size / 2.0;
-    this_tile->position.y += (double)tex_rect->height / 2.0;
+    tiles->position[index].y = wall->position.y + wall->size / 2.0;
+    tiles->position[index].y += (double)tex_rect->height / 2.0;
   }
 
   // By adjusting the tile's position we have stopped the tile and wall from overlapping.
@@ -140,149 +140,133 @@ static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, t
 
 // TILE
 
-tile_t::tile_t ()
-  : position { 0.0, 0.0, 0.0, 0.0 }
-  , direction { 0.0, 0.0, 0.0, 0.0 }
+
+void tiles_t::render(pigeon::gfx::sprite_batch& spritebatch, pigeon::gfx::spritesheet& spritesheet)
 {
-  angle_radians = (float)random_getd (0.0, cuckoo::maths::two_pi <double> ());
-}
+    texture_rect const* tex_rect = get_tile_texture_rect(spritesheet, TILE_ID_NORMAL);
+    CUCKOO_ASSERT(tex_rect);
+    for (int i = 0; i < NUM_TILES; ++i)
+    {
 
 
-// TILE NORMAL
-
-tile_normal_t::tile_normal_t ()
-  : tile_t ()
-  , is_eaten { false }
-{
-  position.x = random_getd (SCREEN_WIDTH / -2.0, SCREEN_WIDTH / 2.0);
-  position.y = random_getd (SCREEN_HEIGHT / -2.0, SCREEN_HEIGHT / 2.0);
-
-  direction.x = random_getd (-1.0, 1.0);
-  direction.y = random_getd (-1.0, 1.0);
-  double const magnitude = cuckoo::maths::sqrt (direction.x * direction.x + direction.y * direction.y);
-  direction.x /= magnitude; // normalise direction
-  direction.y /= magnitude;
-}
-
-void tile_normal_t::update (double elapsed, pigeon::gfx::spritesheet spritesheet)
-{
-  // update position
-  position.x += direction.x * TILE_SPEED_MOVEMENT * elapsed;
-  position.y += direction.y * TILE_SPEED_MOVEMENT * elapsed;
-
-  // update angle
-  angle_radians += (float)TILE_SPEED_ROTATION * elapsed;
-
-  // limit angle
-  float const angle_limit = cuckoo::maths::two_pi <float> ();
-  angle_radians = cuckoo::maths::mod (angle_radians, angle_limit);
-  // Don't understand what is going on here?
-  // Ask Andy to talk through it in your tutorial session.
-  // ...
-  // Now you know what is going on, how would you implement it in SIMD?
-  // Hint: there is no 'mod' function in SIMD.
-}
-void tile_normal_t::render (pigeon::gfx::sprite_batch& sprite_batch,
-  pigeon::gfx::spritesheet spritesheet)
-{
-  texture_rect const* tex_rect = get_tile_texture_rect (spritesheet, get_id ());
-  CUCKOO_ASSERT (tex_rect);
-
-  float const position_x = position.x;
-  float const position_y = position.y;
-  float const angle = angle_radians; // must be in radians!
-  float const scale_x = (float)tex_rect->width;
-  float const scale_y = (float)tex_rect->height;
+        float const position_x = position[i].x;
+        float const position_y = position[i].y;
+        float const angle = angle_radians[i]; // must be in radians!
+        float const scale_x = (float)tex_rect->width;
+        float const scale_y = (float)tex_rect->height;
 
 
-/////////////////////////////////////////////////////////////////////////////////////
-//// DO NOT EDIT CODE BELOW - THIS CODE MUST BE IN YOUR TILE RENDER FUNCTION >>> ////
-/////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////
+        //// DO NOT EDIT CODE BELOW - THIS CODE MUST BE IN YOUR TILE RENDER FUNCTION >>> ////
+        /////////////////////////////////////////////////////////////////////////////////////
 
 
-  // Row-/Column-major matrices refers to the order in which matrix elements are stored in memory.
-  // "In row-major order, the consecutive elements of a row reside next to each other,
-  // whereas the same holds true for consecutive elements of a column in column-major order."
-  // https://en.wikipedia.org/wiki/Row-_and_column-major_order
-  // Magpie uses the COLUMN-MAJOR matrices.
-  //
-  // However, to simplify the matrix_multiply function (and eventual optimisation using SIMD),
-  // we are going to calculate our model (world) matrix with the input matrices in row-major format
-  // and then transpose them before using to render the tile (in effect converting it from row-major to column-major
+          // Row-/Column-major matrices refers to the order in which matrix elements are stored in memory.
+          // "In row-major order, the consecutive elements of a row reside next to each other,
+          // whereas the same holds true for consecutive elements of a column in column-major order."
+          // https://en.wikipedia.org/wiki/Row-_and_column-major_order
+          // Magpie uses the COLUMN-MAJOR matrices.
+          //
+          // However, to simplify the matrix_multiply function (and eventual optimisation using SIMD),
+          // we are going to calculate our model (world) matrix with the input matrices in row-major format
+          // and then transpose them before using to render the tile (in effect converting it from row-major to column-major
 
-  alignas (16) float matrix_position [4][4];
-  matrix_position [0][0] = 1.f; matrix_position [0][1] = 0.f; matrix_position [0][2] = 0.f; matrix_position [0][3] = position_x;
-  matrix_position [1][0] = 0.f; matrix_position [1][1] = 1.f; matrix_position [1][2] = 0.f; matrix_position [1][3] = position_y;
-  matrix_position [2][0] = 0.f; matrix_position [2][1] = 0.f; matrix_position [2][2] = 1.f; matrix_position [2][3] = 0.f;
-  matrix_position [3][0] = 0.f; matrix_position [3][1] = 0.f; matrix_position [3][2] = 0.f; matrix_position [3][3] = 1.f;
+        alignas (16) float matrix_position[4][4];
+        matrix_position[0][0] = 1.f; matrix_position[0][1] = 0.f; matrix_position[0][2] = 0.f; matrix_position[0][3] = position_x;
+        matrix_position[1][0] = 0.f; matrix_position[1][1] = 1.f; matrix_position[1][2] = 0.f; matrix_position[1][3] = position_y;
+        matrix_position[2][0] = 0.f; matrix_position[2][1] = 0.f; matrix_position[2][2] = 1.f; matrix_position[2][3] = 0.f;
+        matrix_position[3][0] = 0.f; matrix_position[3][1] = 0.f; matrix_position[3][2] = 0.f; matrix_position[3][3] = 1.f;
 
-  float const c = cuckoo::maths::cos (angle);
-  float const s = cuckoo::maths::sin (angle);
-  alignas (16) float matrix_rotation [4][4];
-  matrix_rotation [0][0] = c;   matrix_rotation [0][1] = -s;  matrix_rotation [0][2] = 0.f; matrix_rotation [0][3] = 0.f;
-  matrix_rotation [1][0] = s;   matrix_rotation [1][1] = c;   matrix_rotation [1][2] = 0.f; matrix_rotation [1][3] = 0.f;
-  matrix_rotation [2][0] = 0.f; matrix_rotation [2][1] = 0.f; matrix_rotation [2][2] = 1.f; matrix_rotation [2][3] = 0.f;
-  matrix_rotation [3][0] = 0.f; matrix_rotation [3][1] = 0.f; matrix_rotation [3][2] = 0.f; matrix_rotation [3][3] = 1.f;
+        float const c = cuckoo::maths::cos(angle);
+        float const s = cuckoo::maths::sin(angle);
+        alignas (16) float matrix_rotation[4][4];
+        matrix_rotation[0][0] = c;   matrix_rotation[0][1] = -s;  matrix_rotation[0][2] = 0.f; matrix_rotation[0][3] = 0.f;
+        matrix_rotation[1][0] = s;   matrix_rotation[1][1] = c;   matrix_rotation[1][2] = 0.f; matrix_rotation[1][3] = 0.f;
+        matrix_rotation[2][0] = 0.f; matrix_rotation[2][1] = 0.f; matrix_rotation[2][2] = 1.f; matrix_rotation[2][3] = 0.f;
+        matrix_rotation[3][0] = 0.f; matrix_rotation[3][1] = 0.f; matrix_rotation[3][2] = 0.f; matrix_rotation[3][3] = 1.f;
 
-  alignas (16) float matrix_scale [4][4];
-  matrix_scale [0][0] = scale_x; matrix_scale [0][1] = 0.f;     matrix_scale [0][2] = 0.f; matrix_scale [0][3] = 0.f;
-  matrix_scale [1][0] = 0.f;     matrix_scale [1][1] = scale_y; matrix_scale [1][2] = 0.f; matrix_scale [1][3] = 0.f;
-  matrix_scale [2][0] = 0.f;     matrix_scale [2][1] = 0.f;     matrix_scale [2][2] = 1.f; matrix_scale [2][3] = 0.f;
-  matrix_scale [3][0] = 0.f;     matrix_scale [3][1] = 0.f;     matrix_scale [3][2] = 0.f; matrix_scale [3][3] = 1.f;
+        alignas (16) float matrix_scale[4][4];
+        matrix_scale[0][0] = scale_x; matrix_scale[0][1] = 0.f;     matrix_scale[0][2] = 0.f; matrix_scale[0][3] = 0.f;
+        matrix_scale[1][0] = 0.f;     matrix_scale[1][1] = scale_y; matrix_scale[1][2] = 0.f; matrix_scale[1][3] = 0.f;
+        matrix_scale[2][0] = 0.f;     matrix_scale[2][1] = 0.f;     matrix_scale[2][2] = 1.f; matrix_scale[2][3] = 0.f;
+        matrix_scale[3][0] = 0.f;     matrix_scale[3][1] = 0.f;     matrix_scale[3][2] = 0.f; matrix_scale[3][3] = 1.f;
 
-  alignas (16) float matrix_position_rotation [4][4];
-  alignas (16) float matrix_model [4][4];
-
-
-  // matrix_model = matrix_position * matrix_rotation * matrix_scale
-  // Remember, matrix maths dictates that we multiply the matrices in the reverse of order of the desired transformation!
-  // i.e. here we are performing the scaling FIRST, THEN the rotation and FINALLY the translation.
-  matrix_multiply (matrix_position_rotation, matrix_position, matrix_rotation);
-  matrix_multiply (matrix_model, matrix_position_rotation, matrix_scale);
-  *(mat4*)matrix_model = cuckoo::maths::transpose (*(mat4*)matrix_model);
+        alignas (16) float matrix_position_rotation[4][4];
+        alignas (16) float matrix_model[4][4];
 
 
-  sprite_batch.draw (*tex_rect, (float*)matrix_model);
+        // matrix_model = matrix_position * matrix_rotation * matrix_scale
+        // Remember, matrix maths dictates that we multiply the matrices in the reverse of order of the desired transformation!
+        // i.e. here we are performing the scaling FIRST, THEN the rotation and FINALLY the translation.
+        matrix_multiply(matrix_position_rotation, matrix_position, matrix_rotation);
+        matrix_multiply(matrix_model, matrix_position_rotation, matrix_scale);
+        *(mat4*)matrix_model = cuckoo::maths::transpose(*(mat4*)matrix_model);
 
 
-/////////////////////////////////////////////////////////////////////////////////////
-//// <<< DO NOT EDIT CODE ABOVE - THIS CODE MUST BE IN YOUR TILE RENDER FUNCTION ////
-/////////////////////////////////////////////////////////////////////////////////////
+        spritebatch.draw(*tex_rect, (float*)matrix_model);
+
+
+        /////////////////////////////////////////////////////////////////////////////////////
+        //// <<< DO NOT EDIT CODE ABOVE - THIS CODE MUST BE IN YOUR TILE RENDER FUNCTION ////
+        /////////////////////////////////////////////////////////////////////////////////////
+    }
+
 
 }
 
-void tile_normal_t::on_collision (object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet)
+void tiles_t::on_collision(object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index)
 {
-  if (other_type == WALL_TYPE)
-  {
-    // 'other_data' is a wall of some kind
+    if (other_type == WALL_TYPE)
+    {
+        // 'other_data' is a wall of some kind
 
-    // this tile has hit a wall, make the appropriate changes to this tile as a result of it
-    collision_resolve_tile_wall (spritesheet, this, (wall_t*)other_data);
-  }
-  else if (other_type == PLAYER_TYPE)
-  {
-    // 'other_data' is a player of some kind
+        // this tile has hit a wall, make the appropriate changes to this tile as a result of it
+        collision_resolve_tile_wall(spritesheet, this, (wall_t*)other_data, index);
+        
+    }
+    else if (other_type == PLAYER_TYPE)
+    {
+        // 'other_data' is a player of some kind
 
-    is_eaten = true; // mark this tile as 'eaten' and therefore requires replacing
-  }
+        is_eaten[index] = true; // mark this tile as 'eaten' and therefore requires replacing 
+    }
 }
-object_id_t tile_normal_t::get_id () const { return TILE_ID_NORMAL; }
 
-bool tile_normal_t::needs_replacing () const
+object_id_t tiles_t::get_id() const
 {
-  if (is_eaten) // :[
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+    return TILE_ID_NORMAL;
+}
+
+bool tiles_t::needs_replacing(int index)
+{
+    if (is_eaten[index])
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 
 // GENERAL
+
+void tiles_t::initialise_tile(int index) //initialises the replacement of any tiles that have been eaten. ONLY FOR ONE TILE. using the index to find out which tile needs replacing.
+{
+    is_eaten[index] = false;
+    {
+        position[index].x = random_getd(SCREEN_WIDTH / -2.0, SCREEN_WIDTH / 2.0);
+        position[index].y = random_getd(SCREEN_HEIGHT / -2.0, SCREEN_HEIGHT / 2.0);
+
+        direction[index].x = random_getd(-1.0, 1.0);
+        direction[index].y = random_getd(-1.0, 1.0);
+        double const magnitude = cuckoo::maths::sqrt(direction[index].x * direction[index].x + direction[index].y * direction[index].y);
+        direction[index].x /= magnitude; // normalise direction
+        direction[index].y /= magnitude;
+        angle_radians[index] = (float)random_getd(0.0, cuckoo::maths::two_pi <double>());
+    }
+}
 
 void initialise_tiles (tiles_t& tiles)
 {
@@ -295,59 +279,42 @@ tiles_t replace_expired_tiles (tiles_t tiles)
 {
   // The game requires that there are always active { NUM_TILES } on screen.
   // 1. iterate over tiles, remove tiles that need replacing
-  // 2. replace removed tiles with new ones
-
-
-  tiles_t tiles_copy = tiles;
-
+  // 2. replace removed tiles with new ones  
 
   // REMOVE OLD TILES
   // iterators provide a generic way to access the data at a particular element of a container
   // e.g. vectors, lists and maps - https://en.cppreference.com/w/cpp/container
   // iterators are 'special' in that they can be incremented to go to the next element in the collection
   // (even if it is not physically next to it in memory - https://en.cppreference.com/w/cpp/iterator)
-  auto it = tiles_copy.data.begin ();
-  while (it != tiles_copy.data.end ())
-  {
-    if (it->needs_replacing ())
+    for (int i = 0; i < NUM_TILES; ++i)
     {
-      // std::vector::erase () returns next valid element :)
-      it = tiles_copy.data.erase (it);
+        if (tiles.needs_replacing(i))
+            tiles.initialise_tile(i);
     }
-    else
-    {
-      // increment iterator here in case tile was not removed
-      ++it;
-    }
-  }
+    return tiles;
+}
 
+texture_rect const* get_tile_texture_rect(pigeon::gfx::spritesheet& spritesheet, object_id_t id)
+{
+    texture_rect const* rect = nullptr;
+
+    if (id == TILE_ID_NORMAL)
+    {
+        rect = spritesheet.get_sprite_info("tile_0.png");
+    }
+
+    return rect;
+}
 
   // CREATE NEW TILES
-  while (tiles_copy.data.size () < NUM_TILES)
-  {
-    // insert new tile into our container
-    tiles_copy.data.emplace_back ();
-  }
+//  while (tiles_copy.data.size () < NUM_TILES)
+//  {
+//    // insert new tile into our container
+//    tiles_copy;
+//  }
+//
+//  tiles = tiles_copy;
+//
+//  return tiles;
+//}
 
-  tiles = tiles_copy;
-
-  return tiles;
-}
-
-void release_tiles (tiles_t& tiles)
-{
-  tiles.data.clear ();
-}
-
-
-texture_rect const* get_tile_texture_rect (pigeon::gfx::spritesheet& spritesheet, object_id_t id)
-{
-  texture_rect const* rect = nullptr;
-
-  if (id == TILE_ID_NORMAL)
-  {
-    rect = spritesheet.get_sprite_info ("tile_0.png");
-  }
-
-  return rect;
-}

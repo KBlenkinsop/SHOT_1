@@ -41,7 +41,7 @@ static bool is_overlapping (double lhs_position_x, double lhs_position_y, double
 }
 
 void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
-  player_t& p,
+  player_t& player,
   tiles_t& tiles,
   walls_t& walls)
 {
@@ -76,25 +76,33 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
   // PLAYER v TILE
   // lhs = player
   // rhs = tile
+  //{
+  //  player_t& lhs = player;
+  //  for (auto rhs_it = tiles.data.begin (); rhs_it != tiles.data.end (); rhs_it++) // for each tile
+  //  {
+  //    tile_t& rhs = *rhs_it;
+
+  //     get size of player and tile via their spritesheet size
+  //    
+  //    
+
+
+ /*   }
+  }*/
+
+  for (int i = 0; i < NUM_TILES; ++i)
   {
-    player_t& lhs = p;
-    for (auto rhs_it = tiles.data.begin (); rhs_it != tiles.data.end (); rhs_it++) // for each tile
+    texture_rect const* lhs_rect = get_player_texture_rect (spritesheet, player.get_id ());
+    texture_rect const* rhs_rect = get_tile_texture_rect (spritesheet, tiles.get_id ());
+      
+    if (is_overlapping (player.position.x, player.position.y, lhs_rect->width, lhs_rect->height,
+    tiles.position[i].x, tiles.position[i].y, rhs_rect->width, rhs_rect->height))
     {
-      tile_t& rhs = *rhs_it;
-
-      // get size of player and tile via their spritesheet size
-      texture_rect const* lhs_rect = get_player_texture_rect (spritesheet, lhs.get_id ());
-      texture_rect const* rhs_rect = get_tile_texture_rect (spritesheet, rhs.get_id ());
-
-      if (is_overlapping (lhs.position.x, lhs.position.y, lhs_rect->width, lhs_rect->height,
-        rhs.position.x, rhs.position.y, rhs_rect->width, rhs_rect->height))
-      {
-        lhs.on_collision (TILE_TYPE,   (void*)&rhs, spritesheet); // tell player it hit a tile
-        rhs.on_collision (PLAYER_TYPE, (void*)&lhs, spritesheet); // tell tile it hit the player
-      }
+    player.on_collision (TILE_TYPE,   (void*)&tiles, spritesheet, i); // tell player it hit a tile
+    tiles.on_collision (PLAYER_TYPE, (void*)&player, spritesheet, i); // tell tile it hit the player
     }
-  }
 
+  }
 
   // PLAYER v WALL
   // lhs = player
@@ -103,18 +111,18 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
   // in which we get tile data, i.e. via an index (0 --> NUM_TILES - 1)
   // for convenience, feel free to comment out this code whilst testing
   {
-    player_t* lhs = &p;
+    player_t* lhs = &player;
     for (auto rhs_it = walls.data.begin (); rhs_it != walls.data.end (); rhs_it++) // for each wall
     {
       wall_t* rhs = &(*rhs_it);
 
       // get size of player via their spritesheet size
       texture_rect const* lhs_rect = get_player_texture_rect (spritesheet, lhs->get_id ());
-
+      for(int i = 0; i < NUM_TILES; ++i)
       if (is_overlapping (lhs->position.x, lhs->position.y, lhs_rect->width, lhs_rect->height,
         rhs->position.x, rhs->position.y, rhs->size, rhs->size))
       {
-        lhs->on_collision (WALL_TYPE,   (void*)rhs, spritesheet); // tell player it hit a wall
+        lhs->on_collision (WALL_TYPE,   (void*)rhs, spritesheet, i); // tell player it hit a wall
         rhs->on_collision (PLAYER_TYPE, (void*)lhs, spritesheet); // tell wall the player hit it
       }
     }
@@ -153,25 +161,31 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
   // however, PLEASE COME BACK TO UPDATE THIS CODE!!!
   // if the tiles don't collide with the walls they will just fly away
   // and that would be much of a demo then...
-  for (auto lhs_it = tiles.data.begin (); lhs_it != tiles.data.end (); lhs_it++) // for each tile
-  {
-    tile_t& lhs = *lhs_it;
+  //for (auto lhs_it = tiles.; lhs_it != tiles.data.end (); lhs_it++) // for each tile
+  //{
+  //  tile_t& lhs = *lhs_it;
 
-    // get size of tile via their spritesheet size
-    texture_rect const* lhs_rect = get_tile_texture_rect (spritesheet, lhs.get_id ());
+  //  // get size of tile via their spritesheet size
+  // 
 
+  //}
+
+  for (int i = 0; i < NUM_TILES; ++i)
+  { 
+    texture_rect const* lhs_rect = get_tile_texture_rect (spritesheet, tiles.get_id ());
     for (auto rhs_it = walls.data.begin (); rhs_it != walls.data.end (); rhs_it++) // for each wall
     {
       wall_t& rhs = *rhs_it;
 
-      if (is_overlapping (lhs.position.x, lhs.position.y, lhs_rect->width, lhs_rect->height,
+      if (is_overlapping (tiles.position[i].x, tiles.position[i].y, lhs_rect->width, lhs_rect->height,
         rhs.position.x, rhs.position.y, rhs.size, rhs.size))
       {
-        lhs.on_collision (WALL_TYPE, (void*)&rhs, spritesheet); // tell tile it hit a wall
-        rhs.on_collision (TILE_TYPE, (void*)&lhs, spritesheet); // tell wall a tile hit it
+        tiles.on_collision (WALL_TYPE, (void*)&rhs, spritesheet, i); // tell tile it hit a wall
+        rhs.on_collision (TILE_TYPE, (void*)&tiles, spritesheet); // tell wall a tile hit it
       }
     }
   }
+
 
 
   // Hint: that is a lot of getting object texture_rects...

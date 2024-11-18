@@ -109,40 +109,40 @@
 #include "tiles.h"                   // for tiles_t
 #include "extra/player.h"            // for player_t
 #include "extra/walls.h"             // for walls_t
-#include "Timer.h"
+#include "Timer.h"                   // for timer class
 #include <cstdlib>                   // for srand
 #include <optional>                  // for
 
 
 ENTRY_POINT
 {
-////////////////////////////////////////////////
-//// DO NOT EDIT/DELETE/MOVE CODE BELOW >>> ////
-////////////////////////////////////////////////
-  srand (0); // initialise rand ()
+    ////////////////////////////////////////////////
+    //// DO NOT EDIT/DELETE/MOVE CODE BELOW >>> ////
+    ////////////////////////////////////////////////
+      srand(0); // initialise rand ()
 
 
-  // DRIVER
+// DRIVER
+{
+  pigeon::gfx::driver::descriptor const desc =
   {
-    pigeon::gfx::driver::descriptor const desc =
-    {
-      .title             = STRINGIFY (PROJECT_NAME),
-      //.initial_width     = cuckoo::DEFAULT_SCREEN_WIDTH,
-      //.initial_height    = cuckoo::DEFAULT_SCREEN_HEIGHT,
-      //.on_focus_callback = {},
-      //.on_size_callback  = {},
-      .is_resizable      = false,
-      //.show_cursor       = true,
+    .title = STRINGIFY(PROJECT_NAME),
+    //.initial_width     = cuckoo::DEFAULT_SCREEN_WIDTH,
+    //.initial_height    = cuckoo::DEFAULT_SCREEN_HEIGHT,
+    //.on_focus_callback = {},
+    //.on_size_callback  = {},
+    .is_resizable = false,
+    //.show_cursor       = true,
 
-      //.clear_colour      = { .39f, .8f, .92f }, // cornflower blue
+    //.clear_colour      = { .39f, .8f, .92f }, // cornflower blue
 
-      //.camera_type       = pigeon::gfx::driver::camera_type_t::MAGPIE,
-    };
-    if (!pigeon::gfx::driver::initialise (desc))
-    {
-      CUCKOO_ASSERT (!"pigeon::gfx::driver::initialise failed");
-    }
+    //.camera_type       = pigeon::gfx::driver::camera_type_t::MAGPIE,
+  };
+  if (!pigeon::gfx::driver::initialise(desc))
+  {
+    CUCKOO_ASSERT(!"pigeon::gfx::driver::initialise failed");
   }
+}
 ////////////////////////////////////////////////
 //// <<< DO NOT EDIT/DELETE/MOVE CODE ABOVE ////
 ////////////////////////////////////////////////
@@ -151,81 +151,81 @@ ENTRY_POINT
   // SETUP
 
   player_t* player;
-  initialise_player (player);
+  initialise_player(player);
 
   tiles_t tiles;
-  initialise_tiles (tiles);
+  initialise_tiles(tiles);
 
 
   timer FrameTimer;
   // start frame timer
-  FrameTimer.start_timer();
   // have really small first frame elapsed seconds, rather than an unknown time
 
-
+  FrameTimer.start_timer();
   // GAME LOOP
-  while (pigeon::gfx::driver::process_os_messages ())
+  while (pigeon::gfx::driver::process_os_messages())
   {
     FrameTimer.end_timer();
     float elapsed_seconds = FrameTimer.get_elapsed_time_secs();//end timer
 
-
     FrameTimer.start_timer(); // start frame timer
-    cuckoo::printf ("frame : %.5f seconds\n", elapsed_seconds);
+    cuckoo::printf("frame : %.5f seconds\n", elapsed_seconds);
 
+    float average_time = 0;
+    int frames_passed = 0;
+    average_time += FrameTimer.get_elapsed_time_secs();
+    frames_passed++;
+    if (frames_passed < 100)
+    {
+        average_time / frames_passed;
+    }
 
-    unsigned long long const ticks_update_start = cuckoo::get_cpu_time (); // start update timer
 
 
     pigeon::gfx::spritesheet spritesheet = {};
-    if (!spritesheet.initialise ("data/textures/SHOT1/sprites.xml"))
+    if (!spritesheet.initialise("data/textures/SHOT1/sprites.xml"))
     {
-      CUCKOO_ASSERT (!"spritesheet.initialise failed");
+      CUCKOO_ASSERT(!"spritesheet.initialise failed");
     }
 
     pigeon::gfx::sprite_batch sprite_batch {};
     {
-      // We need enough capacity for this sprite batch to render 1 player sprite, 4 wall sprites and { NUM_TILES } tile sprites
-      // Each sprite requires memory for 4 vertices in RAM.
-      pigeon::gfx::descriptor_sprite_batch const desc =
-      {
-        .source_image = spritesheet.get_image (),
-        .max_sprites  = NUM_TILES * 10u,
-      };
-      if (!sprite_batch.initialise (desc))
-      {
-        CUCKOO_ASSERT (!"sprite_batch.initialise failed");
+        // We need enough capacity for this sprite batch to render 1 player sprite, 4 wall sprites and { NUM_TILES } tile sprites
+        // Each sprite requires memory for 4 vertices in RAM.
+        pigeon::gfx::descriptor_sprite_batch const desc =
+        {
+          .source_image = spritesheet.get_image(),
+          .max_sprites = NUM_TILES * 10u,
+        };
+        if (!sprite_batch.initialise(desc))
+        {
+          CUCKOO_ASSERT(!"sprite_batch.initialise failed");
+        }
       }
-    }
 
 
     // UPDATE
     {
-      // PLAYER
-      {
-        player->update (elapsed_seconds, spritesheet);
-      }
-
-      // TILES
-      {
-        for (auto it = tiles.data.begin (); it != tiles.data.end (); it++)
+        // PLAYER
         {
-          it->update (elapsed_seconds, spritesheet);
+          player->update(elapsed_seconds, spritesheet);
         }
+
+        // TILES
+        tiles.update(elapsed_seconds);
+
+        // COLLISIONS
+        {
+          vector4 window_size = { (double)pigeon::gfx::driver::get_screen_size().x, (double)pigeon::gfx::driver::get_screen_size().y, 0.0, 0.0 };
+          walls_t walls = initialise_walls(window_size);
+          resolve_collisions(spritesheet, *player, tiles, walls);
+          release_walls(walls);
+        }
+
+        check_player_needs_replacing(player);
+
+        tiles = replace_expired_tiles(tiles);
       }
-
-      // COLLISIONS
-      {
-        vector4 window_size = { (double)pigeon::gfx::driver::get_screen_size ().x, (double)pigeon::gfx::driver::get_screen_size ().y, 0.0, 0.0 };
-        walls_t walls = initialise_walls (window_size);
-        resolve_collisions (spritesheet, *player, tiles, walls);
-        release_walls (walls);
-      }
-
-      check_player_needs_replacing (player);
-
-      tiles = replace_expired_tiles (tiles);
-    }
 
     //cuckoo::printf ("update: %.5f seconds\n", elapsed_seconds_update);
 
@@ -234,82 +234,74 @@ ENTRY_POINT
 //// DO NOT EDIT/DELETE/MOVE CODE BELOW >>> ////
 ////////////////////////////////////////////////
     // RENDER
-    if (pigeon::gfx::driver::can_render_frame ())
+    if (pigeon::gfx::driver::can_render_frame())
     {
-      if (!pigeon::gfx::driver::begin_frame ())
+      if (!pigeon::gfx::driver::begin_frame())
       {
-        CUCKOO_ASSERT (!"pigeon::gfx::driver::begin_frame failed");
+        CUCKOO_ASSERT(!"pigeon::gfx::driver::begin_frame failed");
       }
       {
-        if (!sprite_batch.start_batch ())
+        if (!sprite_batch.start_batch())
         {
-          CUCKOO_ASSERT (!"sprite_batch.start_batch failed");
+          CUCKOO_ASSERT(!"sprite_batch.start_batch failed");
         }
-////////////////////////////////////////////////
-//// <<< DO NOT EDIT/DELETE/MOVE CODE ABOVE ////
-////////////////////////////////////////////////
+        ////////////////////////////////////////////////
+        //// <<< DO NOT EDIT/DELETE/MOVE CODE ABOVE ////
+        ////////////////////////////////////////////////
 
 
-        // PLAYER
+                // PLAYER
+                {
+                  player->render(sprite_batch, spritesheet);
+                }
+
+                // TILES
+                {
+                    // iterators provide a generic way to access the data at a particular element of a container
+                    // e.g. vectors, lists and maps // https://en.cppreference.com/w/cpp/container
+                    // iterators are 'special' in that they can be incremented to go to the next element in the collection
+                    // (even if it is not physically next to it in memory // https://en.cppreference.com/w/cpp/iterator)
+                      tiles.render(sprite_batch, spritesheet);
+
+                      // WALLS
+                      {
+                        vector4 window_size = { (double)pigeon::gfx::driver::get_screen_size().x, (double)pigeon::gfx::driver::get_screen_size().y, 0.0, 0.0 };
+                        walls_t walls = initialise_walls(window_size);
+                        for (auto& wall : walls.data)
+                        {
+                          wall.render(sprite_batch, spritesheet);
+                        }
+                        release_walls(walls);
+                      }
+
+
+                      ////////////////////////////////////////////////
+                      //// DO NOT EDIT/DELETE/MOVE CODE BELOW >>> ////
+                      ////////////////////////////////////////////////
+                              sprite_batch.end_batch();
+                              pigeon::gfx::driver::render(sprite_batch);
+                            }
+                            if (!pigeon::gfx::driver::end_frame()) // render to window
+                            {
+                              CUCKOO_ASSERT(!"pigeon::gfx::driver::end_frame failed");
+                            }
+                          }
+      ////////////////////////////////////////////////
+      //// <<< DO NOT EDIT/DELETE/MOVE CODE ABOVE ////
+      ////////////////////////////////////////////////
+
+}
+          sprite_batch.release();
+          spritesheet.release();
+        } // GAME LOOP: END
+
+
+        // RELEASE RESOURCES
         {
-          player->render (sprite_batch, spritesheet);
+          release_player(player);
+
+          pigeon::gfx::driver::release();
         }
 
-        // TILES
-        {
-          // iterators provide a generic way to access the data at a particular element of a container
-          // e.g. vectors, lists and maps // https://en.cppreference.com/w/cpp/container
-          // iterators are 'special' in that they can be incremented to go to the next element in the collection
-          // (even if it is not physically next to it in memory // https://en.cppreference.com/w/cpp/iterator)
-          for (auto it = tiles.data.begin (); it != tiles.data.end (); it++)
-          {
-            // get pointer to tile from iterator
-            tile_t& t = *it;
-
-            t.render (sprite_batch, spritesheet);
-          }
-        }
-
-        // WALLS
-        {
-          vector4 window_size = { (double)pigeon::gfx::driver::get_screen_size ().x, (double)pigeon::gfx::driver::get_screen_size ().y, 0.0, 0.0 };
-          walls_t walls = initialise_walls (window_size);
-          for (auto& wall : walls.data)
-          {
-            wall.render (sprite_batch, spritesheet);
-          }
-          release_walls (walls);
-        }
-
-
-////////////////////////////////////////////////
-//// DO NOT EDIT/DELETE/MOVE CODE BELOW >>> ////
-////////////////////////////////////////////////
-        sprite_batch.end_batch ();
-        pigeon::gfx::driver::render (sprite_batch);
-      }
-      if (!pigeon::gfx::driver::end_frame ()) // render to window
-      {
-        CUCKOO_ASSERT (!"pigeon::gfx::driver::end_frame failed");
-      }
-    }
-////////////////////////////////////////////////
-//// <<< DO NOT EDIT/DELETE/MOVE CODE ABOVE ////
-////////////////////////////////////////////////
-
-
-    sprite_batch.release ();
-    spritesheet.release ();
-  } // GAME LOOP: END
-
-
-  // RELEASE RESOURCES
-  {
-    release_tiles (tiles);
-    release_player (player);
-
-    pigeon::gfx::driver::release ();
-  }
-
-  return 0;
+        return 0;
 }
