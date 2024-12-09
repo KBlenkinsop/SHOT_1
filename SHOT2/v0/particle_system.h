@@ -30,9 +30,11 @@
 
 #include "constants.h"
 
-#include <bitset>                      // for
+#include <bitset>                      // for 
 #include <list>                        // for std::list
 #include <random>                      // for std::random_device, std::uniform_real_distribution, std::uniform_int_distribution
+#include <vector>                      // for std::vector
+#include <thread>                      // for threads
 
 
 // UTILITY
@@ -325,14 +327,14 @@ static std::list <particle*> emit (std::list <particle*> particles, double elaps
   int particle_type = 0;
   for (float i = 0.f; i < (float)PARTICLE_MAX * 2.f; i += 1.f)
   {
-    // make sure we never exceed maximum particle budget
-    if (particles.size () == PARTICLE_MAX)
+    // make sure we never exceed maximum particle budget per list(thread)
+    if (particles.size () == PARTICLE_MAX / NUM_THREADS) 
     {
       cuckoo::printf ("num particles == PARTICLE_MAX\n");
       continue;
     }
     // make sure we never exceed frame's particle budget
-    if (num_particles_spawned == PARTICLE_SPAWN_RATE)
+    if (num_particles_spawned == PARTICLE_SPAWN_RATE / NUM_THREADS)
     {
       continue;
     }
@@ -363,13 +365,22 @@ static std::list <particle*> emit (std::list <particle*> particles, double elaps
   return particles;
 }
 
+/// <summary>
+/// For both process and emit, there are 2 threads each. Worker assigns emit and process to these threads. 
+/// </summary>
+/// <param name="particles"></param>
+/// <param name="elapsed_seconds"></param>
+void Worker(std::list <particle*>& particles, double elapsed_seconds )
+{
+    particles = process(particles, elapsed_seconds);
+    particles = emit(particles, elapsed_seconds); 
+}
+
 class particle_system_t
 {
 public:
   bool initialise (void)
   {
-    // other important stuff...
-
     pigeon::gfx::descriptor_point_renderer const desc =
     {
       .max_points = PARTICLE_MAX,
@@ -377,12 +388,32 @@ public:
     return point_renderer.initialise (desc);
   }
 
+  /// <summary>
+  /// std::vector<std::threads> threads, creates the array of to the size of NUM_THREADS (4).
+  /// Then the threads are filled via the worker function using a reference to particles.
+  /// Afterwards the threads are joined into the main thread and then there is a limiter for the max amount of particles spawned per thread. 
+  /// </summary>
+  /// <param name="elapsed_seconds"></param>
+  /// <param name="num_active_particles"></param>
   void update (double elapsed_seconds, long long& num_active_particles)
   {
-    particles = process (particles, elapsed_seconds);
-    particles = emit (particles, elapsed_seconds);
+      std::vector <std::thread> threads;
+      for (unsigned i = 0u; i < NUM_THREADS; ++i)
+      {
+          threads.emplace_back(Worker, std::ref(particles[i]), elapsed_seconds);
+      }
+      for (std::thread& t : threads)
+      {
+          t.join();
+      }
 
-    num_active_particles = (20 * particles.size ()) / 20;
+      num_active_particles = 0;
+      for (unsigned i = 0u; i < NUM_THREADS; ++i)
+      {
+          num_active_particles += (20 * particles[i].size()) / 20;
+      }
+
+
   }
   void render (void)
   {
@@ -400,11 +431,14 @@ public:
 
 
     cuckoo::printf ("rendering particles\n");
-
-    for (particle const* p : particles)
+    for (unsigned i = 0u; i < NUM_THREADS; ++i)
     {
-      point_renderer.draw ((float)p->position.x, (float)p->position.y,
-        vec4 ((float)p->colour.r, (float)p->colour.g, (float)p->colour.b, (float)p->colour.a));
+        for (particle const* p : particles[i])
+        {
+          point_renderer.draw ((float)p->position.x, (float)p->position.y,
+            vec4 ((float)p->colour.r, (float)p->colour.g, (float)p->colour.b, (float)p->colour.a));
+        }
+
     }
 
 
@@ -440,25 +474,29 @@ public:
 
 
     // delete all particles
-    std::list <particle*>::iterator it = particles.begin ();
-    while (it != particles.end ())
+    for (unsigned i = 0u; i < NUM_THREADS; ++i)
     {
-      // get pointer to particle from iterator
-      particle* p = *it;
+        std::list <particle*>::iterator it = particles[i].begin(); 
+        while (it != particles[i].end()) 
+        {
+          // get pointer to particle from iterator
+          particle* p = *it;
 
-      // release data previously allocated for this particle
-      // no effect if p == nullptr
-      delete p;
+          // release data previously allocated for this particle
+          // no effect if p == nullptr
+          delete p;
 
-      // remove pointer to now released particle from list
-      // std::list::erase () returns next valid element :)
-      it = particles.erase (it);
+          // remove pointer to now released particle from list
+          // std::list::erase () returns next valid element :)
+          it = particles[i].erase(it); 
+        }
     }
+
   }
 
 
 private:
   pigeon::gfx::point_renderer point_renderer;
-  std::list <particle*> particles;
+  std::list <particle*> particles[NUM_THREADS];
 
 };

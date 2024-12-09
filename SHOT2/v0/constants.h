@@ -1,5 +1,6 @@
 #pragma once
 
+const unsigned NUM_THREADS = 4u;
 
 ////////////////////////////////////////////////
 //// DO NOT EDIT/DELETE/MOVE CODE BELOW >>> ////
