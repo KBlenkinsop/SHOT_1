@@ -1,6 +1,6 @@
 #include "collision.h"
 
-#include "cuckoo/time/time.h" // for cuckoo::sleep
+
 
 #include "tiles.h"            // for tile_t
 #include "extra/player.h"     // for player_t
@@ -83,12 +83,7 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
   //    tile_t& rhs = *rhs_it;
 
   //     get size of player and tile via their spritesheet size
-  //    
-  //    
 
-
- /*   }
-  }*/
 
   for (int i = 0; i < NUM_TILES; ++i)
   {
@@ -163,9 +158,9 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
   // and that would be much of a demo then...
   //for (auto lhs_it = tiles.; lhs_it != tiles.data.end (); lhs_it++) // for each tile
   //{
-  //  tile_t& lhs = *lhs_it;
+  //  tiles_t& lhs = *lhs_it;
 
-  //  // get size of tile via their spritesheet size
+  //   /*get size of tile via their spritesheet size*/
   // 
 
   //}

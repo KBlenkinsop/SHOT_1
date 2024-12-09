@@ -2,7 +2,6 @@
 
 #include "cuckoo/core/asserts.h" // for CUCKOO_ASSERT
 #include "cuckoo/maths/maths.h"  // for cuckoo::maths::two_pi, ...
-#include "cuckoo/time/time.h"    // for cuckoo::sleep :[
 
 #include "extra/walls.h"         // for wall_t
 
@@ -55,7 +54,6 @@ static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, t
   if (wall->get_id () == WALL_ID_LEFT || wall->get_id () == WALL_ID_RIGHT)
   {
     // tile has hit the left or right wall on screen
-
     // the left and right walls are pefectly aligned with the y-axis
     // therefore, the tile's direction response is to have its x direction 'reflected' perfectly
     tiles->direction[index].x = -tiles->direction[index].x;
@@ -63,7 +61,6 @@ static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, t
   else
   {
     // tile has hit the top or bottom wall on screen
-
     // reflect y direction
     tiles->direction[index].y = -tiles->direction[index].y;
   }
@@ -100,7 +97,6 @@ static void collision_resolve_tile_wall (pigeon::gfx::spritesheet spritesheet, t
 
   // By adjusting the tile's position we have stopped the tile and wall from overlapping.
   // By reflecting the tile's direction the tile will not collide with it on the next frame.
-  // Job done!
 
 
   // N.B.
@@ -219,14 +215,13 @@ void tiles_t::on_collision(object_type_t other_type, void* other_data, pigeon::g
     if (other_type == WALL_TYPE)
     {
         // 'other_data' is a wall of some kind
-
         // this tile has hit a wall, make the appropriate changes to this tile as a result of it
         collision_resolve_tile_wall(spritesheet, this, (wall_t*)other_data, index);
         
     }
     else if (other_type == PLAYER_TYPE)
     {
-        // 'other_data' is a player of some kind
+        // 'other_data' is a player
 
         is_eaten[index] = true; // mark this tile as 'eaten' and therefore requires replacing 
     }
@@ -270,8 +265,6 @@ void tiles_t::initialise_tile(int index) //initialises the replacement of any ti
 
 void initialise_tiles (tiles_t& tiles)
 {
-  // hhhmmm, what else could go here?
-
   tiles = replace_expired_tiles (tiles);
 }
 
@@ -305,16 +298,3 @@ texture_rect const* get_tile_texture_rect(pigeon::gfx::spritesheet& spritesheet,
 
     return rect;
 }
-
-  // CREATE NEW TILES
-//  while (tiles_copy.data.size () < NUM_TILES)
-//  {
-//    // insert new tile into our container
-//    tiles_copy;
-//  }
-//
-//  tiles = tiles_copy;
-//
-//  return tiles;
-//}
-

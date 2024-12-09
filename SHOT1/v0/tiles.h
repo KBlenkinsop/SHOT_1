@@ -5,7 +5,6 @@
 #include "cuckoo/core/asserts.h"    // for cuckoo assert
 #include "constants.h"              // for object_type_t, object_id_t...
 #include "extra/utility.h"          // for vector4, random_getf
-
 #include <vector>                   // for std::vector
 
 
@@ -13,32 +12,11 @@
 // TILE NORMAL
 
 /// @brief consumed when the player touches it
-//struct tile_normal_t
-//{
-//public:
-//  tile_normal_t ();
-//
-//  void update(double elapsed, pigeon::gfx::spritesheet spritesheet) override;
-//  void render(pigeon::gfx::sprite_batch& sprite_batch,
-//    pigeon::gfx::spritesheet spritesheet) override;
-//
-//  void on_collision(object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet) override;
-//  object_id_t get_id() const override;
-//
-//  bool needs_replacing() const override;
-//
-//public:
-//  vector4 position;
-//  vector4 direction;
-//  float angle_radians;
-//private:
-//  bool is_eaten;
-//};
+
 // GENERAL
 
 struct tiles_t
 {
-  //std::vector <tile_normal_t> data;
 
     void initialise_tile(int index);
 
@@ -82,9 +60,6 @@ void initialise_tiles (tiles_t& tiles);
 /// replace removed tiles with new ones
 /// the game requires that there are always { NUM_TILES } active
 tiles_t replace_expired_tiles (tiles_t tiles);
-
-/// @brief post game loop tiles tear down code
-void release_tiles (tiles_t& tiles);
 
 
 /// @brief search the spritesheet for the sub-sprite associated with a particular type of tile

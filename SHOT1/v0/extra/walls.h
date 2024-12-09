@@ -7,7 +7,6 @@
 #include "utility.h"                 // for vector4
 
 #include <list>                      // for std::list
-#include <vector>                    // for
 
 
 struct wall_t

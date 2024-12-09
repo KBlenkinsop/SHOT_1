@@ -19,7 +19,6 @@ unsigned const SCREEN_HEIGHT = 720u;
 
 // None of the following VALUES should be changed!
 // (Except for experimentation during development. Just make sure to put their values back before submission!!)
-// Their type though...  that's up for debate.
 
 
 // player

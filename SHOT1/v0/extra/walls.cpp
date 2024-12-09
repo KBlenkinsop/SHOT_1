@@ -37,7 +37,6 @@ walls_t initialise_walls (vector4 window_size)
 {
   walls_t walls;
 
-  // origin is in centre of the screen!
   // make width of walls bigger than is visible to help prevent tunneling at low FPS
 
   double const wall_size = (double)cuckoo::maths::max (window_size.x, window_size.y) + 50.0;
