@@ -348,7 +348,6 @@ static std::list <particle*> emit (std::list <particle*> particles, double elaps
     if (particle_type == 0)
     {
       particles.push_back (new particle_a);
-      //cuckoo::printf ("spawn particle a\n");
     }
     else if (particle_type == 1)
     {
