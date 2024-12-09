@@ -83,6 +83,7 @@
 
 #include <optional>          // for
 #include <string>            // for
+#include "Timer.h"
 
 
 ENTRY_POINT
@@ -132,18 +133,26 @@ ENTRY_POINT
   unsigned long long ticks_frame_start;
   ticks_frame_start = cuckoo::get_cpu_time (); // start frame timer
   // have really small first frame elapsed seconds, rather than an unknown time
-
-
+  //start my timer
+  timer timer;
+  timer.start_timer();
   // GAME LOOP
   while (pigeon::gfx::driver::process_os_messages ())
   {
-    unsigned long long const ticks_frame_end = cuckoo::get_cpu_time (); // end frame timer
-    double const elapsed_seconds = (double)(ticks_frame_end - ticks_frame_start) / (double)clock_frequency;
-    ticks_frame_start = cuckoo::get_cpu_time (); // start frame timer
-    cuckoo::printf ("frame : %.5f seconds\n", elapsed_seconds);
+      timer.end_timer();
+      float ElapsedSeconds = timer.get_elapsed_time_secs();
+      timer.start_timer();
+
+      unsigned long long const ticks_frame_end = cuckoo::get_cpu_time (); // end frame timer
+      double const elapsed_seconds = (double)(ticks_frame_end - ticks_frame_start) / (double)clock_frequency;
+      ticks_frame_start = cuckoo::get_cpu_time (); // start frame timer
+      cuckoo::printf ("frame : %.5f seconds\n", elapsed_seconds);
+      cuckoo::printf ("FrameTimer : %.5f seconds\n", ElapsedSeconds); // print out the frame times
+      
 
 
-    unsigned long long const ticks_update_start = cuckoo::get_cpu_time (); // start update timer
+    unsigned long long const ticks_update_start = cuckoo::get_cpu_time (); // start update timer 
+
 
 
     // UPDATE
@@ -152,7 +161,7 @@ ENTRY_POINT
     }
 
 
-    unsigned long long const ticks_update_end = cuckoo::get_cpu_time (); // end update timer
+    unsigned long long const ticks_update_end = cuckoo::get_cpu_time (); // end update timer 
     double const elapsed_seconds_update = (double)(ticks_update_end - ticks_update_start) / (double)clock_frequency;
     cuckoo::printf ("update: %.5f seconds\n", elapsed_seconds_update);
 

@@ -33,8 +33,10 @@
 #include <bitset>                      // for 
 #include <list>                        // for std::list
 #include <random>                      // for std::random_device, std::uniform_real_distribution, std::uniform_int_distribution
+
 #include <vector>                      // for std::vector
 #include <thread>                      // for threads
+
 
 
 // UTILITY
@@ -346,7 +348,7 @@ static std::list <particle*> emit (std::list <particle*> particles, double elaps
     if (particle_type == 0)
     {
       particles.push_back (new particle_a);
-      cuckoo::printf ("spawn particle a\n");
+      //cuckoo::printf ("spawn particle a\n");
     }
     else if (particle_type == 1)
     {
