@@ -1,7 +1,4 @@
 #include "collision.h"
-
-
-
 #include "tiles.h"            // for tile_t
 #include "extra/player.h"     // for player_t
 #include "extra/walls.h"      // for wall_t
@@ -74,17 +71,7 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
 
 
   // PLAYER v TILE
-  // lhs = player
-  // rhs = tile
-  //{
-  //  player_t& lhs = player;
-  //  for (auto rhs_it = tiles.data.begin (); rhs_it != tiles.data.end (); rhs_it++) // for each tile
-  //  {
-  //    tile_t& rhs = *rhs_it;
-
-  //     get size of player and tile via their spritesheet size
-
-
+  // get size of player and tile via their spritesheet size
   for (int i = 0; i < NUM_TILES; ++i)
   {
     texture_rect const* lhs_rect = get_player_texture_rect (spritesheet, player.get_id ());
@@ -102,9 +89,6 @@ void resolve_collisions (pigeon::gfx::spritesheet spritesheet,
   // PLAYER v WALL
   // lhs = player
   // rhs = wall
-  // after 'DOD'ing the tiles this code will need altering to reflect the new way
-  // in which we get tile data, i.e. via an index (0 --> NUM_TILES - 1)
-  // for convenience, feel free to comment out this code whilst testing
   {
     player_t* lhs = &player;
     for (auto rhs_it = walls.data.begin (); rhs_it != walls.data.end (); rhs_it++) // for each wall

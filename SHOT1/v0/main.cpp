@@ -88,8 +88,7 @@
 #include "extra/player.h"            // for player_t
 #include "extra/walls.h"             // for walls_t
 #include "Timer.h"                   // for timer class
-#include <cstdlib>                   // for srand
-#include <optional>                  // for
+#include <cstdlib>                   // for srand                  
 
 
 ENTRY_POINT
@@ -167,9 +166,9 @@ ENTRY_POINT
       float elapsed_seconds = FrameTimer.get_elapsed_time_secs();//end timer
 
       FrameTimer.start_timer(); // start frame timer
-      cuckoo::printf("frame : %.5f seconds\n", elapsed_seconds);
+      cuckoo::printf("FrameTime : %.5f seconds\n", elapsed_seconds);
 
-      float average_time = 0;//working out average time
+      float average_time;//working out average time
       int frames_passed = 0;
    
       frames_passed++;
@@ -177,8 +176,9 @@ ENTRY_POINT
       if (frames_passed < 100)
       {
           average_time = elapsed_seconds / frames_passed;
+          cuckoo::printf("AverageTime : %.5f seconds\n", average_time);
       }
-        cuckoo::printf("AverageTime : %.5f seconds\n", average_time);
+
 
 
 
@@ -275,7 +275,7 @@ ENTRY_POINT
 
             // RELEASE RESOURCES
             {
-                sprite_batch.release();
+                sprite_batch.release();//release what you have used in reverse order
                 spritesheet.release();
                 release_player(player);
 

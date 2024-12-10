@@ -2,7 +2,7 @@
 
 #include "pigeon/gfx/sprite_batch.h" // for pigeon::gfx::sprite_batch
 #include "pigeon/gfx/spritesheet.h"  // for pigeon::gfx::spritesheet
-#include "cuckoo/core/asserts.h"    // for cuckoo assert
+//#include "cuckoo/core/asserts.h"    // for cuckoo assert
 #include "constants.h"              // for object_type_t, object_id_t...
 #include "extra/utility.h"          // for vector4, random_getf
 #include <vector>                   // for std::vector
@@ -20,6 +20,11 @@ struct tiles_t
 
     void initialise_tile(int index);
 
+    /// <summary>
+    /// every frame the position, direction and rotation are updated to make the 
+    /// tiles move accross the screen whilst spinning
+    /// </summary>
+    /// <param name="elapsed"></param>
     void update(double elapsed)
     {
         for (int i = 0; i < NUM_TILES; ++i)
@@ -34,7 +39,7 @@ struct tiles_t
         }
     }
 
-    void render(pigeon::gfx::sprite_batch& spritebatch, pigeon::gfx::spritesheet& spritesheet); //spritesheet 
+    void render(pigeon::gfx::sprite_batch& spritebatch, pigeon::gfx::spritesheet& spritesheet);
   
 
     void on_collision(object_type_t other_type, void* other_data, pigeon::gfx::spritesheet spritesheet, int index);
