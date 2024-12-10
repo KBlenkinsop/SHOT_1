@@ -30,7 +30,7 @@
 
 #include "constants.h"
 
-#include <bitset>                      // for 
+
 #include <list>                        // for std::list
 #include <random>                      // for std::random_device, std::uniform_real_distribution, std::uniform_int_distribution
 
