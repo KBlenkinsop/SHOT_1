@@ -72,20 +72,7 @@ static double random_getd (double min, double max)
 
   return distribution (rd);
 }
-/// @brief returns a random number between min and max inclusive
-/// @param min minimum random number (inclusive)
-/// @param max maximum random number (inclusive)
-/// @return random number between min & max (inclusive)
-static long long random_geti (long long min, long long max)
-{
-  CUCKOO_ASSERT (max >= min);
 
-
-  static std::random_device rd;
-  std::uniform_int_distribution <i64> distribution (min, max);
-
-  return distribution (rd);
-}
 
 
 // PARTICLES
